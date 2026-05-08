@@ -1,0 +1,43 @@
+[Unit]
+Description=vulnlab mock AWS IMDSv1 (proxied by nginx from 169.254.169.254:80)
+After=network.target
+Documentation=https://github.com/sampsonc/vulnlab.dev
+
+[Service]
+Type=simple
+WorkingDirectory=/home/chs/vulnlab.dev
+ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8169 \
+    --workers 2 \
+    --access-logfile - \
+    --error-logfile - \
+    apps.metadata_mock.app:app
+Restart=on-failure
+RestartSec=2s
+
+# Hardening
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# Network: IMDS mock; serves on 127.0.0.1, no outbound needed.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

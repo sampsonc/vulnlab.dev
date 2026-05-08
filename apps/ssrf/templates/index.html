@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}SSRF labs · vulnlab.dev{% endblock %}
+{% block body %}
+<h1>SSRF labs</h1>
+<p class="tag">ssrf.vulnlab.dev</p>
+
+<p>Six labs covering the SSRF detection surface most tools care about: unfiltered fetch, broken validators, scheme abuse, blind variants, and cloud metadata.</p>
+
+<p>Internal targets that exist on this host (and would normally be unreachable from the public internet):</p>
+<ul>
+    <li><code>http://127.0.0.1:8089/</code> — internal admin/secret API</li>
+    <li><code>http://169.254.169.254/latest/meta-data/</code> — mock AWS IMDSv1</li>
+</ul>
+
+<h2>Labs</h2>
+{% for lab in labs %}
+<a class="card" href="/{{ lab.slug }}/">
+    <div class="title">{{ lab.title }} <span class="pill">{{ lab.sink }}</span></div>
+    <div class="summary">{{ lab.summary }}</div>
+</a>
+{% endfor %}
+
+<h2>For tool builders</h2>
+<p>Source for every lab is published. Each lab page links to its own source via <code>/source/&lt;slug&gt;</code>. Run your SAST/DAST/LLM-based reviewer against the deployed app or the GitHub repo and see what each catches.</p>
+{% endblock %}

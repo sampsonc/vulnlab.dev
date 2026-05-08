@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · ssrf.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="url">URL to fetch:</label><br>
+    <input type="text" id="url" name="url" value="{{ url|default('') }}" placeholder="https://example.com/" autocomplete="off">
+    <p><button type="submit">Fetch</button></p>
+</form>
+
+{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}</p>
+{% endif %}
+
+{% if body is not none %}
+    <h2>Response body (first 4KB)</h2>
+    <pre class="body">{{ body }}</pre>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source for this lab →</a></p>
+{% endblock %}

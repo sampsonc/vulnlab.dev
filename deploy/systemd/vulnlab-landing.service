@@ -1,0 +1,43 @@
+[Unit]
+Description=vulnlab.dev landing page (Flask)
+After=network.target
+Documentation=https://github.com/sampsonc/vulnlab.dev
+
+[Service]
+Type=simple
+WorkingDirectory=/home/chs/vulnlab.dev
+ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8081 \
+    --workers 2 \
+    --access-logfile - \
+    --error-logfile - \
+    apps.landing.app:app
+Restart=on-failure
+RestartSec=2s
+
+# Hardening
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# Network: serves a static HTML landing — no outbound needed.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=multi-user.target

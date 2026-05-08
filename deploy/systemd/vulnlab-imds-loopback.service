@@ -1,0 +1,14 @@
+[Unit]
+Description=Add 169.254.169.254/32 to lo for vulnlab mock IMDS
+After=network-pre.target
+Before=network.target nginx.service vulnlab-metadata-mock.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/usr/sbin/ip addr add 169.254.169.254/32 dev lo label lo:vulnlab 2>/dev/null || /usr/sbin/ip addr show dev lo | grep -q 169.254.169.254'
+ExecStop=/bin/sh -c '/usr/sbin/ip addr del 169.254.169.254/32 dev lo 2>/dev/null || true'
+
+[Install]
+WantedBy=multi-user.target

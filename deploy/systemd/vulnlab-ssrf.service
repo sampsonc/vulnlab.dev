@@ -1,0 +1,48 @@
+[Unit]
+Description=ssrf.vulnlab.dev — intentionally vulnerable SSRF labs (Flask)
+After=network.target
+Documentation=https://github.com/sampsonc/vulnlab.dev
+
+[Service]
+Type=simple
+WorkingDirectory=/home/chs/vulnlab.dev
+ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8082 \
+    --workers 4 \
+    --timeout 30 \
+    --access-logfile - \
+    --error-logfile - \
+    apps.ssrf.app:app
+Restart=on-failure
+RestartSec=2s
+
+# Hardening
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# Network: SSRF labs make outbound requests by design.
+# Allow internet + 127.0.0.0/8 (so they can reach the internal service)
+# + 169.254.169.254 (mock IMDS).
+# Deny other RFC1918 ranges so labs cannot pivot to other internal networks.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=10.0.0.0/8 172.16.0.0/12 192.168.0.0/16 169.254.0.0/16
+IPAddressAllow=127.0.0.0/8
+IPAddressAllow=169.254.169.254/32
+
+[Install]
+WantedBy=multi-user.target
