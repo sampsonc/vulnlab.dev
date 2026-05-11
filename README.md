@@ -20,11 +20,20 @@ Live at **<https://vulnlab.dev>**. Every host under `vulnlab.dev` contains real,
 | `/basic` | Unfiltered URL fetch | `requests.get` |
 | `/blocklist` | Substring deny-list, bypassable (`0.0.0.0`, decimal IPs, etc.) | `urllib.request.urlopen` |
 | `/allowlist` | "URL must contain `vulnlab.dev`" — bypassable via path/query | `requests.get` |
-| `/scheme` | Any URL scheme accepted (`file://`, `gopher://`, …) | `urllib.request.urlopen` |
+| `/parser` | Validator's regex disagrees with the HTTP client (`user@host`) | `requests.get` |
+| `/redirect` | Host allowlist passes, then 302 follow lands inside | `requests.get` |
+| `/scheme` | Any URL scheme accepted (`file://`, …) | `urllib.request.urlopen` |
 | `/blind` | Response body discarded — OOB callback required | `httpx.get` |
+| `/webhook` | Semi-blind POST: leaks status, length, `Content-Type`, `X-*` headers | `requests.post` |
 | `/metadata` | AWS-themed; mock IMDSv1 at `169.254.169.254` | `requests.get` |
+| `/metadata-gcp` | GCP-themed; server injects `Metadata-Flavor: Google` | `requests.get` |
+| `/metadata-azure` | Azure-themed; server injects `Metadata: true` | `requests.get` |
+| `/gopher` | `gopher://` to a non-HTTP TCP service via libcurl | `pycurl` |
 
-Every lab page links to its own source via `/source/<slug>`.
+Every lab page links to its own source via `/source/<slug>`. A self-hosted
+open redirector at `/r/?to=<url>` is mounted on `ssrf.vulnlab.dev` for
+chaining through host-allowlist labs without setting up your own attacker
+host.
 
 ## Stack
 
@@ -41,13 +50,17 @@ For agent-facing notes (gotchas when editing), see [`CLAUDE.md`](./CLAUDE.md).
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install flask gunicorn requests httpx pygments
+pip install -e .   # pulls flask, gunicorn, requests, httpx, pygments, pycurl
 # Run them all on different ports:
 FLASK_APP=apps.landing.app       flask run --port 5000
 FLASK_APP=apps.ssrf.app          flask run --port 5001
 FLASK_APP=apps.internal.app      flask run --port 8089
 FLASK_APP=apps.metadata_mock.app flask run --port 8169
+python -m apps.gopher_target.app                       # raw TCP on :6479
 ```
+
+`pycurl` is needed for the `gopher` lab; the manylinux wheel works without
+libcurl-dev system packages on common distros.
 
 The metadata lab needs the IMDS mock reachable at `http://169.254.169.254/`
 for canned IMDS payloads to work as-is. In production that's done via

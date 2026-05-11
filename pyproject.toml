@@ -10,6 +10,7 @@ dependencies = [
     "httpx>=0.27",
     "pygments>=2.18",
     "markupsafe>=2.1",
+    "pycurl>=7.45",
 ]
 
 [tool.setuptools]

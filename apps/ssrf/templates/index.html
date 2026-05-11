@@ -4,13 +4,18 @@
 <h1>SSRF labs</h1>
 <p class="tag">ssrf.vulnlab.dev</p>
 
-<p>Six labs covering the SSRF detection surface most tools care about: unfiltered fetch, broken validators, scheme abuse, blind variants, and cloud metadata.</p>
+<p>A dozen labs covering the SSRF detection surface most tools care about: unfiltered fetch, broken validators, parser-disagreement bypasses, redirect chases, scheme abuse, gopher-to-TCP pivots, fully and semi-blind variants, and cloud metadata in three flavors (AWS, GCP, Azure).</p>
 
 <p>Internal targets that exist on this host (and would normally be unreachable from the public internet):</p>
 <ul>
-    <li><code>http://127.0.0.1:8089/</code> — internal admin/secret API</li>
+    <li><code>http://127.0.0.1:8089/</code> — internal admin/secret API (HTTP)</li>
+    <li><code>http://127.0.0.1:6479/</code> — "redis-like" TCP service (raw bytes, no HTTP)</li>
     <li><code>http://169.254.169.254/latest/meta-data/</code> — mock AWS IMDSv1</li>
+    <li><code>http://169.254.169.254/computeMetadata/v1/</code> — mock GCP metadata (needs <code>Metadata-Flavor: Google</code>)</li>
+    <li><code>http://169.254.169.254/metadata/</code> — mock Azure IMDS (needs <code>Metadata: true</code>)</li>
 </ul>
+
+<p>A self-hosted open redirector lives at <code>/r/?to=&lt;url&gt;</code> on this domain — convenient for chaining through host-allowlist labs.</p>
 
 <h2>Labs</h2>
 {% for lab in labs %}

@@ -11,7 +11,7 @@ document is the technical reference for how it's wired up.
 | Realistic SAST surface | Vulnerable code is real Python with named sinks (`requests.get`, `urllib.request.urlopen`, `httpx.get`). Source is published. |
 | Realistic DAST surface | Public over HTTPS; no auth; canonical endpoints (`?url=…`); standard payloads work. |
 | Distinct labs per detection pattern | One blueprint per variant; bypass-of-the-week kept out of any single lab. |
-| Cloud-metadata realism | Mock IMDSv1 served at `169.254.169.254:80`, not a non-standard host/port. |
+| Cloud-metadata realism | Mock metadata served at `169.254.169.254:80`, not a non-standard host/port. AWS IMDSv1, GCP Compute Engine, and Azure IMDS are all served from the same address with their real-world path prefixes and required headers. |
 | Safe to host | Each lab runs as a `DynamicUser` systemd service with `IPAddressDeny`/`Allow` cages so it can demonstrate SSRF without becoming a pivot to the wider internet. |
 
 Non-goals: not a CTF, not a competition, not gated by login or flags
@@ -48,13 +48,23 @@ public internet ──────────▶  vulnlab.dev      → 127.0.0.
                                    from inside the SSRF lab process:
 
                                             127.0.0.1:8089          (vulnlab-internal)
+                                            127.0.0.1:6479          (vulnlab-gopher-target, raw TCP)
                                             169.254.169.254:80      (via the loopback nginx vhost)
 ```
 
 The "internal" service at `:8089` is the canonical "you shouldn't be able
-to reach this" SSRF target. The IMDS mock at `169.254.169.254` is the
-canonical cloud-metadata target. Both serve flags so successful exploitation
-is unambiguous.
+to reach this" SSRF target. The metadata mock at `169.254.169.254` is the
+canonical cloud-metadata target and serves three flavors (AWS at
+`/latest/`, GCP at `/computeMetadata/v1/`, Azure at `/metadata/`); GCP and
+Azure additionally require their provider-specific request header, matching
+production behavior. The gopher target at `:6479` stands in for any
+non-HTTP TCP service (Redis, memcached, SMTP, …) and replies to any bytes
+with a flag — it's reached by the `gopher` lab via pycurl/libcurl. All
+serve flags so successful exploitation is unambiguous.
+
+`ssrf.vulnlab.dev` also mounts an open redirector at `/r/?to=<url>`
+(`apps/ssrf/redirector.py`). It exists so the `redirect` lab is
+self-contained; it also chains cleanly through `allowlist` and `blocklist`.
 
 ## Filesystem layout
 
@@ -65,9 +75,11 @@ is unambiguous.
 │   ├── ssrf/                             ssrf.vulnlab.dev
 │   │   ├── app.py                        registers blueprints, /source/<slug>
 │   │   ├── labs/                         one module per lab variant
+│   │   ├── redirector.py                 open redirector mounted at /r/
 │   │   └── templates/
 │   ├── internal/                         the "you shouldn't reach this" service
-│   └── metadata_mock/                    fake AWS IMDSv1
+│   ├── metadata_mock/                    mock AWS + GCP + Azure metadata
+│   └── gopher_target/                    raw TCP "redis-like" target for the gopher lab
 ├── deploy/
 │   ├── nginx/                            source-of-truth nginx vhosts
 │   └── systemd/                          source-of-truth systemd units
@@ -115,6 +127,7 @@ Plus per-service network policy:
 | `vulnlab-ssrf` | `10/8 172.16/12 192.168/16 169.254/16` | `127/8 169.254.169.254/32` | Labs must reach the internet (realism), the internal service on 127.0.0.1, and the mock IMDS — but not other private networks. |
 | `vulnlab-internal` | `any` | `localhost` | Server-only; never initiates outbound. |
 | `vulnlab-metadata-mock` | `any` | `localhost` | Server-only; never initiates outbound. |
+| `vulnlab-gopher-target` | `any` | `localhost` | Server-only raw TCP; never initiates outbound. |
 
 The `IPAddressAllow=169.254.169.254/32` on `vulnlab-ssrf` overrides the
 broader `IPAddressDeny=169.254.0.0/16` because the /32 prefix is more

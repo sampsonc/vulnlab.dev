@@ -13,11 +13,17 @@ extends to `xss.`, `sqli.`, etc.
 | `vulnlab-landing` | `127.0.0.1:8081` | gunicorn → `apps.landing.app:app` |
 | `vulnlab-ssrf` | `127.0.0.1:8082` | gunicorn → `apps.ssrf.app:app` |
 | `vulnlab-internal` | `127.0.0.1:8089` | gunicorn → `apps.internal.app:app` (the SSRF labs' "you shouldn't reach this" target) |
-| `vulnlab-metadata-mock` | `127.0.0.1:8169` | gunicorn → `apps.metadata_mock.app:app` |
+| `vulnlab-metadata-mock` | `127.0.0.1:8169` | gunicorn → `apps.metadata_mock.app:app` (AWS + GCP + Azure flavors, all on 169.254.169.254 via nginx) |
+| `vulnlab-gopher-target` | `127.0.0.1:6479` | python → `apps.gopher_target.app` (raw TCP, replies to any bytes with a flag; used by the gopher SSRF lab) |
 | `vulnlab-imds-loopback` | oneshot | adds `169.254.169.254/32` to `lo` |
 
-Nothing on `:8089` or `:8169` is exposed by nginx — they're only reachable from
-the lab process itself, which is the point.
+Nothing on `:8089`, `:8169`, or `:6479` is exposed by nginx — they're only
+reachable from the lab process itself, which is the point.
+
+The SSRF app also mounts an open redirector at `/r/?to=<url>` on
+`ssrf.vulnlab.dev` (see `apps/ssrf/redirector.py`). It exists so the
+`redirect` lab is self-contained; it is also useful for chaining through
+`allowlist` and `blocklist`.
 
 ## Gotchas
 
@@ -67,7 +73,11 @@ A lab passes acceptance when:
 
 For SSRF specifically, the canonical exploit targets are:
 - `http://127.0.0.1:8089/secret` → returns `VULNLAB{ssrf-reached-internal-service}`
-- `http://169.254.169.254/latest/meta-data/iam/security-credentials/vulnlab-imds-test-role` → returns mock AWS creds with `AKIAIOSFODNN7EXAMPLE`
+- `http://127.0.0.1:8089/webhook-callback` → response header `X-Internal-Flag: VULNLAB{ssrf-webhook-leaked-via-headers}` (used by `webhook` lab)
+- `gopher://127.0.0.1:6479/_anything` (via pycurl/libcurl) → returns `+VULNLAB{ssrf-gopher-pivot-to-redis-like-service}` (used by `gopher` lab)
+- `http://169.254.169.254/latest/meta-data/iam/security-credentials/vulnlab-imds-test-role` → mock AWS creds (`AKIAIOSFODNN7EXAMPLE`)
+- `http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token` with `Metadata-Flavor: Google` → mock GCP OAuth token (used by `metadata-gcp`)
+- `http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com/` with `Metadata: true` → mock Azure MSI token (used by `metadata-azure`)
 
 ## What's deliberately *not* hardened
 

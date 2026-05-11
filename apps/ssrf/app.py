@@ -14,6 +14,7 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import PythonLexer
 
 from .labs import BLUEPRINTS, LABS
+from .redirector import bp as redirector_bp
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = Path(__file__).resolve().parent
@@ -24,6 +25,7 @@ def create_app() -> Flask:
 
     for bp in BLUEPRINTS:
         app.register_blueprint(bp)
+    app.register_blueprint(redirector_bp)
 
     @app.after_request
     def add_banner(resp):

@@ -1,7 +1,8 @@
-"""Mock AWS IMDSv1 service.
+"""Mock cloud-instance metadata service (AWS + GCP + Azure).
 
-Bound to 169.254.169.254:80 (the same address real AWS instances use). Real
-SSRF tools sending IMDS-aware payloads will hit something realistic.
+Bound to 169.254.169.254:80, the link-local address all three providers
+use. Routing is path-based; GCP and Azure additionally require their
+provider-specific request header, matching production behavior.
 
 Simulates IMDSv1 only on purpose — IMDSv2 requires a PUT-issued token, which
 GET-only SSRF can't obtain. Demonstrating that asymmetry is part of the point.
@@ -10,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-from flask import Flask, Response, jsonify
+from flask import Flask, Response, jsonify, request
 
 ROLE = "vulnlab-imds-test-role"
 INSTANCE_ID = "i-0deadbeef0123abcd"
@@ -141,6 +142,153 @@ def create_app() -> Flask:
     def imdsv2_token():
         # IMDSv2 requires PUT with a TTL header. We respond 405 to GETs.
         return Response("", status=405)
+
+    # --- GCP (Compute Engine / Cloud Run / GKE) ---
+    # Real GCE returns 403 unless 'Metadata-Flavor: Google' is set. Tools that
+    # don't know to add it (or apps whose SDK doesn't add it) hit this guard.
+    GCP_PROJECT = "vulnlab-fake-project"
+    GCP_SA_EMAIL = "vulnlab-sa@vulnlab-fake-project.iam.gserviceaccount.com"
+    GCP_FAKE_TOKEN = {
+        "access_token": "ya29.VULNLAB-FAKE-GCP-OAUTH2-TOKEN-NOT-REAL",
+        "expires_in": 3599,
+        "token_type": "Bearer",
+    }
+
+    def _require_gcp_header():
+        if request.headers.get("Metadata-Flavor") != "Google":
+            return text("Missing Metadata-Flavor:Google header.\n"), 403
+        return None
+
+    @app.get("/computeMetadata/v1/")
+    def gcp_root():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text("instance/\nproject/\n")
+
+    @app.get("/computeMetadata/v1/project/project-id")
+    def gcp_project_id():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text(GCP_PROJECT)
+
+    @app.get("/computeMetadata/v1/instance/")
+    def gcp_instance_index():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text("hostname\nid\nmachine-type\nservice-accounts/\nzone\n")
+
+    @app.get("/computeMetadata/v1/instance/id")
+    def gcp_instance_id():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text("8675309000000000001")
+
+    @app.get("/computeMetadata/v1/instance/hostname")
+    def gcp_hostname():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text(f"vulnlab-vm.c.{GCP_PROJECT}.internal")
+
+    @app.get("/computeMetadata/v1/instance/zone")
+    def gcp_zone():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text(f"projects/123456789/zones/us-central1-a")
+
+    @app.get("/computeMetadata/v1/instance/service-accounts/")
+    def gcp_sa_index():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text("default/\n")
+
+    @app.get("/computeMetadata/v1/instance/service-accounts/default/")
+    def gcp_sa_default():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text("aliases\nemail\nscopes\ntoken\n")
+
+    @app.get("/computeMetadata/v1/instance/service-accounts/default/email")
+    def gcp_sa_email():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text(GCP_SA_EMAIL)
+
+    @app.get("/computeMetadata/v1/instance/service-accounts/default/scopes")
+    def gcp_sa_scopes():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        return text(
+            "https://www.googleapis.com/auth/cloud-platform\n"
+            "https://www.googleapis.com/auth/devstorage.read_only\n"
+        )
+
+    @app.get("/computeMetadata/v1/instance/service-accounts/default/token")
+    def gcp_sa_token():
+        if (err := _require_gcp_header()) is not None:
+            return err
+        body = dict(GCP_FAKE_TOKEN)
+        body["_marker"] = "VULNLAB{ssrf-gcp-metadata-token-leaked}"
+        return Response(json.dumps(body, indent=2), mimetype="application/json")
+
+    # --- Azure (App Service / VM / AKS) ---
+    # Real Azure IMDS requires 'Metadata: true' and returns 400 otherwise.
+    AZURE_TENANT = "11111111-2222-3333-4444-555555555555"
+    AZURE_SUB = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    AZURE_FAKE_TOKEN_BASE = {
+        "access_token": "VULNLAB-FAKE-AZURE-MSI-TOKEN-NOT-REAL",
+        "client_id": "99999999-8888-7777-6666-555555555555",
+        "expires_in": "3599",
+        "expires_on": "4099161599",
+        "ext_expires_in": "3599",
+        "not_before": "1715000000",
+        "resource": "https://management.azure.com/",
+        "token_type": "Bearer",
+    }
+
+    def _require_azure_header():
+        if request.headers.get("Metadata") != "true":
+            body = {
+                "error": "Required metadata header not specified or not valid.",
+            }
+            return Response(json.dumps(body), status=400, mimetype="application/json")
+        return None
+
+    @app.get("/metadata/instance")
+    def azure_instance():
+        if (err := _require_azure_header()) is not None:
+            return err
+        payload = {
+            "compute": {
+                "azEnvironment": "AzurePublicCloud",
+                "location": "eastus",
+                "name": "vulnlab-vm",
+                "resourceGroupName": "vulnlab-rg",
+                "subscriptionId": AZURE_SUB,
+                "tenantId": AZURE_TENANT,
+                "vmId": "deadbeef-1111-2222-3333-444444444444",
+                "vmSize": "Standard_B2s",
+            },
+            "network": {
+                "interface": [
+                    {
+                        "ipv4": {
+                            "ipAddress": [{"privateIpAddress": "10.0.0.4", "publicIpAddress": "20.0.0.5"}],
+                            "subnet": [{"address": "10.0.0.0", "prefix": "24"}],
+                        }
+                    }
+                ]
+            },
+        }
+        return Response(json.dumps(payload, indent=2), mimetype="application/json")
+
+    @app.get("/metadata/identity/oauth2/token")
+    def azure_msi_token():
+        if (err := _require_azure_header()) is not None:
+            return err
+        body = dict(AZURE_FAKE_TOKEN_BASE)
+        body["resource"] = request.args.get("resource", body["resource"])
+        body["_marker"] = "VULNLAB{ssrf-azure-msi-token-leaked}"
+        return Response(json.dumps(body, indent=2), mimetype="application/json")
 
     @app.errorhandler(404)
     def nf(_e):

@@ -6,7 +6,7 @@ reach it directly (no nginx vhost proxies here).
 """
 from __future__ import annotations
 
-from flask import Flask, jsonify, request
+from flask import Flask, Response, jsonify, request
 
 
 def create_app() -> Flask:
@@ -41,6 +41,14 @@ def create_app() -> Flask:
             remote_addr=request.remote_addr,
             note="The remote_addr is the SSRF process. The public never speaks to me directly.",
         )
+
+    @app.route("/webhook-callback", methods=["GET", "POST"])
+    def webhook_callback():
+        # Used by the webhook (semi-blind) lab. Echoes the flag in a response
+        # header so a leak that only exposes headers/metadata still wins.
+        resp = Response('{"ack":true}\n', mimetype="application/json")
+        resp.headers["X-Internal-Flag"] = "VULNLAB{ssrf-webhook-leaked-via-headers}"
+        return resp
 
     return app
 
