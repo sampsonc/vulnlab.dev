@@ -1,8 +1,11 @@
-"""ssrf.vulnlab.dev — entrypoint.
+"""xss.vulnlab.dev — entrypoint.
 
-Mounts each lab as a Flask blueprint, exposes /, /source/<slug> (Pygments),
-and a tiny "internal-only" endpoint at /internal that the labs are meant to
-reach (and which the public, in theory, is not).
+Mounts each XSS lab as a Flask blueprint. Mirrors the ssrf app: exposes /,
+/source/<slug>, /meta/<slug>, /meta/, and a couple of well-known endpoints.
+
+No CSP, X-Frame-Options, or X-XSS-Protection headers — adding them would
+mask the very behavior tools are supposed to detect. (The csp-bypass lab
+sets its own CSP locally on its responses; that's the lab.)
 """
 from __future__ import annotations
 
@@ -15,7 +18,6 @@ from pygments.lexers import PythonLexer
 
 from .labs import BLUEPRINTS, LABS
 from .labs.detect import DETECT_HINTS
-from .redirector import bp as redirector_bp
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_DIR = Path(__file__).resolve().parent
@@ -26,7 +28,6 @@ def create_app() -> Flask:
 
     for bp in BLUEPRINTS:
         app.register_blueprint(bp)
-    app.register_blueprint(redirector_bp)
 
     @app.after_request
     def add_banner(resp):
@@ -94,7 +95,7 @@ def create_app() -> Flask:
     @app.get("/robots.txt")
     def robots():
         return (
-            "User-agent: *\nAllow: /\nSitemap: https://ssrf.vulnlab.dev/sitemap.xml\n",
+            "User-agent: *\nAllow: /\nSitemap: https://xss.vulnlab.dev/sitemap.xml\n",
             200,
             {"Content-Type": "text/plain"},
         )
@@ -105,7 +106,7 @@ def create_app() -> Flask:
             "Contact: mailto:carl.sampson@gmail.com\n"
             "Expires: 2027-12-31T23:59:59Z\n"
             "Preferred-Languages: en\n"
-            "Canonical: https://ssrf.vulnlab.dev/.well-known/security.txt\n"
+            "Canonical: https://xss.vulnlab.dev/.well-known/security.txt\n"
             "Policy: https://vulnlab.dev/\n"
             "# Intentionally vulnerable. No need to report.\n"
         )

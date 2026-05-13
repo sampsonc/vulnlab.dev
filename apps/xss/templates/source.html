@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}source: {{ filename }} · xss.vulnlab.dev{% endblock %}
+{% block extra_head %}
+<style>
+{{ css|safe }}
+.src { padding: 1rem; border-radius: 6px; overflow: auto; font-size: .9rem; }
+.src table { border-collapse: collapse; }
+.src .linenos { padding-right: 1rem; color: #6e7681; user-select: none; }
+</style>
+{% endblock %}
+{% block body %}
+<h1>Source: {{ lab.title }}</h1>
+<p class="tag">apps/xss/labs/{{ filename }} · <a href="https://github.com/sampsonc/vulnlab.dev/blob/main/apps/xss/labs/{{ filename }}">view on GitHub</a></p>
+
+<p><a href="/{{ lab.slug }}/">← back to lab</a></p>
+
+{{ code_html|safe }}
+{% endblock %}

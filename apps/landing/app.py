@@ -12,10 +12,21 @@ CLASSES = [
         "name": "Server-Side Request Forgery",
         "host": "ssrf.vulnlab.dev",
         "status": "live",
-        "labs": 6,
+        "labs": 12,
         "blurb": (
             "The server fetches a URL you control. Find ways past the validators "
             "and reach things you shouldn't."
+        ),
+    },
+    {
+        "slug": "xss",
+        "name": "Cross-Site Scripting",
+        "host": "xss.vulnlab.dev",
+        "status": "live",
+        "labs": 5,
+        "blurb": (
+            "Reflected, stored, DOM, CSP-bypass, and mutation XSS — the variants "
+            "tools differ on. Each lab shows what the scanner should fire on."
         ),
     },
 ]

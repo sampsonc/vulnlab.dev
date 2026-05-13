@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · xss.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="post" action="/{{ meta.slug }}/">
+    <label for="author">Name:</label><br>
+    <input type="text" id="author" name="author" value="" placeholder="anon" autocomplete="off">
+    <label for="body" style="margin-top:.5rem; display:block">Comment:</label>
+    <textarea id="body" name="body" placeholder="leave a comment..."></textarea>
+    <p><button type="submit">Post comment</button></p>
+</form>
+
+<h2>Comments</h2>
+{% if comments %}
+    {% for c in comments %}
+    <div class="comment">
+        <div class="meta">{{ c.author }} · {{ c.ts }}</div>
+        <div>{{ c.body_html }}</div>
+    </div>
+    {% endfor %}
+    <form method="post" action="/{{ meta.slug }}/clear" style="margin-top:1rem">
+        <button type="submit">Clear all comments</button>
+    </form>
+{% else %}
+    <p>(no comments yet — be the first)</p>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source for this lab →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

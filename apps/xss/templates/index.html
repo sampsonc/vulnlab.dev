@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}XSS labs · vulnlab.dev{% endblock %}
+{% block body %}
+<h1>XSS labs</h1>
+<p class="tag">xss.vulnlab.dev</p>
+
+<p>Five labs covering the XSS detection surface tools care about: reflected and stored sinks, a DOM-only sink the server never sees, a strict-looking CSP that's bypassable via a same-origin JSONP endpoint, and a mutation XSS where a server-side regex sanitizer is defeated by client-side <code>innerHTML</code> reparse.</p>
+
+<h2>Labs</h2>
+{% for lab in labs %}
+<a class="card" href="/{{ lab.slug }}/">
+    <div class="title">{{ lab.title }} <span class="pill">{{ lab.sink }}</span></div>
+    <div class="summary">{{ lab.summary }}</div>
+</a>
+{% endfor %}
+
+<h2>For tool builders</h2>
+<p>Source for every lab is published. Each lab page links to its own source via <code>/source/&lt;slug&gt;</code>. Each lab also exposes a JSON detection hint at <code>/meta/&lt;slug&gt;</code> (and an index at <code>/meta/</code>) describing what a scanner should produce — CWE, subtype, sinks, exploit examples, success markers, tags. Use it to benchmark your tool against ground truth.</p>
+{% endblock %}

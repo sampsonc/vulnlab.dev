@@ -1,0 +1,46 @@
+[Unit]
+Description=xss.vulnlab.dev — intentionally vulnerable XSS labs (Flask)
+After=network.target
+Documentation=https://github.com/sampsonc/vulnlab.dev
+
+[Service]
+Type=simple
+WorkingDirectory=/home/chs/vulnlab.dev
+ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8083 \
+    --workers 4 \
+    --timeout 30 \
+    --access-logfile - \
+    --error-logfile - \
+    apps.xss.app:app
+Restart=on-failure
+RestartSec=2s
+
+# Hardening
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# Network: XSS labs are pure server-side reflection + client-side JS sinks.
+# The app never needs outbound — deny everything except loopback (gunicorn
+# binds to 127.0.0.1 and may need localhost for its own bookkeeping).
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=127.0.0.0/8
+
+[Install]
+WantedBy=multi-user.target

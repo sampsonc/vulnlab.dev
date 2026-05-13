@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · xss.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<p>This page reads <code>location.hash</code> and writes it directly into the DOM via <code>innerHTML</code>. Edit the URL fragment and reload.</p>
+
+<p>Try: <code>{{ request.host_url[:-1] }}/dom/#&lt;img src=x onerror=alert(1)&gt;</code></p>
+
+<h2>Live render of the fragment</h2>
+<div id="target" style="border:1px dashed #888; padding: 1rem; min-height: 3em;">
+    <em>(load the page with a # fragment to see it here)</em>
+</div>
+
+<script>
+// INTENTIONAL: classic DOM XSS — taint flows from location.hash to innerHTML.
+function render() {
+    const raw = decodeURIComponent(location.hash.slice(1));
+    if (!raw) return;
+    document.getElementById('target').innerHTML = raw;
+}
+window.addEventListener('DOMContentLoaded', render);
+window.addEventListener('hashchange', render);
+</script>
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source for this lab →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

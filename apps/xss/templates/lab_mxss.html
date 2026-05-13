@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · xss.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="comment">Comment:</label><br>
+    <textarea id="comment" name="comment" placeholder="type a comment...">{{ raw }}</textarea>
+    <p><button type="submit">Preview</button></p>
+</form>
+
+{% if raw %}
+    <h2>Server-side sanitized (text)</h2>
+    <pre class="body">{{ sanitized_text }}</pre>
+
+    <h2>Stored in &lt;template&gt; (hidden)</h2>
+    <template id="stored">{{ sanitized_html }}</template>
+
+    <h2>Live preview (innerHTML reparse)</h2>
+    <div id="preview" style="border:1px dashed #888; padding: 1rem; min-height: 3em;"></div>
+
+    <script>
+    // INTENTIONAL: round-trip the "sanitized" markup through innerHTML, which
+    // re-parses HTML and can re-activate payloads hidden in parser-mode-shifting
+    // tags (<noscript>, <style>, <svg>, ...).
+    const tpl = document.getElementById('stored');
+    const preview = document.getElementById('preview');
+    preview.innerHTML = tpl.innerHTML;
+    </script>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source for this lab →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

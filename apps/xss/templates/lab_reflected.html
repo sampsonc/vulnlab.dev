@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · xss.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="q">Search:</label><br>
+    <input type="text" id="q" name="q" value="{{ q|default('') }}" placeholder="hello" autocomplete="off">
+    <p><button type="submit">Search</button></p>
+</form>
+
+{% if rendered_query is not none %}
+    <h2>Results for: {{ rendered_query }}</h2>
+    <p>(no results)</p>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source for this lab →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

@@ -1,17 +1,18 @@
 # vulnlab.dev — agent notes
 
 Intentionally vulnerable web labs for testing security tools. Each vuln class
-gets its own subdomain. Currently only `ssrf.vulnlab.dev` is live; the shape
-extends to `xss.`, `sqli.`, etc.
+gets its own subdomain. Currently `ssrf.vulnlab.dev` and `xss.vulnlab.dev`
+are live; the shape extends to `sqli.`, `ssti.`, etc.
 
 ## Topology
 
 | Service | Bind | Backed by |
 |---|---|---|
-| nginx | `:80` / `:443` (vulnlab.dev, ssrf.vulnlab.dev) | system nginx |
+| nginx | `:80` / `:443` (vulnlab.dev, ssrf.vulnlab.dev, xss.vulnlab.dev) | system nginx |
 | nginx | `169.254.169.254:80` (mock IMDS proxy) | system nginx |
 | `vulnlab-landing` | `127.0.0.1:8081` | gunicorn → `apps.landing.app:app` |
 | `vulnlab-ssrf` | `127.0.0.1:8082` | gunicorn → `apps.ssrf.app:app` |
+| `vulnlab-xss` | `127.0.0.1:8083` | gunicorn → `apps.xss.app:app` |
 | `vulnlab-internal` | `127.0.0.1:8089` | gunicorn → `apps.internal.app:app` (the SSRF labs' "you shouldn't reach this" target) |
 | `vulnlab-metadata-mock` | `127.0.0.1:8169` | gunicorn → `apps.metadata_mock.app:app` (AWS + GCP + Azure flavors, all on 169.254.169.254 via nginx) |
 | `vulnlab-gopher-target` | `127.0.0.1:6479` | python → `apps.gopher_target.app` (raw TCP, replies to any bytes with a flag; used by the gopher SSRF lab) |
@@ -70,6 +71,11 @@ A lab passes acceptance when:
 2. The intended *non-exploit* (the validator's happy path) is rejected or
    safely handled.
 3. `curl /source/<slug>` returns syntax-highlighted source.
+4. `curl /meta/<slug>` returns the lab's detection hint JSON (CWE, subtype,
+   exploit examples, success markers, tags) for scanner benchmarking.
+
+The SSRF canonical exploits below are encoded in `scripts/check-ssrf.sh`
+(run after every deploy; nonzero exit on regression).
 
 For SSRF specifically, the canonical exploit targets are:
 - `http://127.0.0.1:8089/secret` → returns `VULNLAB{ssrf-reached-internal-service}`
