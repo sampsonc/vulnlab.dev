@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · sqli.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="post" action="/{{ meta.slug }}/">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username" value="{{ username|default('') }}" autocomplete="off">
+    <label for="password" style="margin-top:.5rem; display:block">Password:</label>
+    <input type="password" id="password" name="password" autocomplete="off">
+    <p><button type="submit">Log in</button></p>
+</form>
+
+{% if query %}
+    <details open>
+        <summary>Query that ran</summary>
+        <pre class="query">{{ query }}</pre>
+    </details>
+{% endif %}
+
+{% if result %}
+    <p><strong>Result:</strong> {{ result }}</p>
+{% endif %}
+
+{% if error %}
+    <p class="error"><strong>SQL error:</strong></p>
+    <pre class="body">{{ error }}</pre>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · sqli.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="id">Product ID:</label><br>
+    <input type="text" id="id" name="id" value="{{ pid|default('') }}" placeholder="1" autocomplete="off">
+    <p><button type="submit">Look up</button></p>
+</form>
+
+{% if pid %}
+    {% if product %}
+        <h2>{{ product.name }}</h2>
+        <p>{{ product.description }}</p>
+    {% else %}
+        <p>Not found.</p>
+    {% endif %}
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

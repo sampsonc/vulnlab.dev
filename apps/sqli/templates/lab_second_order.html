@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · sqli.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<h2>1. Register</h2>
+<form method="post" action="/{{ meta.slug }}/register">
+    <label for="username">Username (free text):</label><br>
+    <input type="text" id="username" name="username" placeholder="alice2" autocomplete="off">
+    <p><button type="submit">Register</button></p>
+</form>
+
+{% if new_id %}
+    <p>Registered as user id <code>{{ new_id }}</code>. Now visit
+       <a href="/{{ meta.slug }}/profile?id={{ new_id }}">/{{ meta.slug }}/profile?id={{ new_id }}</a>.</p>
+{% endif %}
+
+{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}</p>
+{% endif %}
+
+<h2>2. View profile</h2>
+<form method="get" action="/{{ meta.slug }}/profile">
+    <label for="id">User id:</label><br>
+    <input type="text" id="id" name="id" placeholder="1" autocomplete="off">
+    <p><button type="submit">View profile</button></p>
+</form>
+
+{% if profile %}
+    <h3>Profile</h3>
+    <p>id={{ profile.id }} · username=<code>{{ profile.username }}</code> · role={{ profile.role }}</p>
+
+    {% if query %}
+        <details open>
+            <summary>Notes query that ran (with username concatenated)</summary>
+            <pre class="query">{{ query }}</pre>
+        </details>
+    {% endif %}
+
+    <h3>Notes for this user</h3>
+    {% if notes %}
+        <ul>
+            {% for n in notes %}<li>{{ n }}</li>{% endfor %}
+        </ul>
+    {% else %}
+        <p>(no notes)</p>
+    {% endif %}
+{% endif %}
+
+{% if recent %}
+    <h2>Recent registrations</h2>
+    <table class="rows">
+        <thead><tr><th>id</th><th>username</th></tr></thead>
+        <tbody>
+            {% for r in recent %}
+            <tr><td>{{ r[0] }}</td><td><code>{{ r[1] }}</code></td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

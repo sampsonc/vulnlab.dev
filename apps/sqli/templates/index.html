@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}SQLi labs · vulnlab.dev{% endblock %}
+{% block body %}
+<h1>SQL Injection labs</h1>
+<p class="tag">sqli.vulnlab.dev</p>
+
+<p>Five labs covering the SQLi detection surface most tools care about: in-band UNION extraction, error-based extraction via verbose exceptions, blind boolean oracle, blind time-based via <code>SLEEP()</code>, and second-order through stored input.</p>
+
+<p>All labs sit on top of a single MariaDB schema (<code>vulnlab_sqli</code>) seeded with users, products, and a <code>secrets</code> table whose rows are the per-lab flags.</p>
+
+<h2>Labs</h2>
+{% for lab in labs %}
+<a class="card" href="/{{ lab.slug }}/">
+    <div class="title">{{ lab.title }} <span class="pill">{{ lab.sink }}</span></div>
+    <div class="summary">{{ lab.summary }}</div>
+</a>
+{% endfor %}
+
+<h2>For tool builders</h2>
+<p>Source for every lab is published. Each lab page links to its own source via <code>/source/&lt;slug&gt;</code>. Each lab also exposes a JSON detection hint at <code>/meta/&lt;slug&gt;</code> (and an index at <code>/meta/</code>) describing what a scanner should report: CWE, subtype, sinks, exploit examples, success markers, tags.</p>
+{% endblock %}

@@ -1,21 +1,23 @@
 [Unit]
-Description=xss.vulnlab.dev — intentionally vulnerable XSS labs (Flask)
-After=network.target
+Description=sqli.vulnlab.dev — intentionally vulnerable SQLi labs (Flask)
+After=network.target mariadb.service
+Wants=mariadb.service
 Documentation=https://github.com/sampsonc/vulnlab.dev
 
 [Service]
 Type=simple
 WorkingDirectory=/home/chs/vulnlab.dev
+
+# DB credentials live here (created by scripts/bootstrap-sqli-db.sh).
+EnvironmentFile=/etc/vulnlab/sqli.env
+
 ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
-    --bind 127.0.0.1:8083 \
-    --workers 1 \
+    --bind 127.0.0.1:8084 \
+    --workers 4 \
     --timeout 30 \
     --access-logfile - \
     --error-logfile - \
-    apps.xss.app:app
-# workers=1 is intentional: the stored-XSS lab keeps comments in process-local
-# memory. Multiple workers would scatter posts so a GET on a different worker
-# would not see them. Throughput is not a concern for a lab.
+    apps.sqli.app:app
 Restart=on-failure
 RestartSec=2s
 
@@ -38,9 +40,8 @@ SystemCallArchitectures=native
 SystemCallFilter=@system-service
 SystemCallFilter=~@privileged @resources
 
-# Network: XSS labs are pure server-side reflection + client-side JS sinks.
-# The app never needs outbound — deny everything except loopback (gunicorn
-# binds to 127.0.0.1 and may need localhost for its own bookkeeping).
+# Network: SQLi labs need to reach MariaDB on 127.0.0.1:3306 and nothing
+# else. Deny everything except loopback.
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 IPAddressDeny=any
 IPAddressAllow=127.0.0.0/8

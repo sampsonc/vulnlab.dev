@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · sqli.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="category">Category:</label><br>
+    <input type="text" id="category" name="category" value="{{ category|default('') }}" placeholder="widgets, sprockets, gadgets, ..." autocomplete="off">
+    <p><button type="submit">Search</button></p>
+</form>
+
+{% if query %}
+    <details open>
+        <summary>Query (for learning — wouldn't normally be shown)</summary>
+        <pre class="query">{{ query }}</pre>
+    </details>
+{% endif %}
+
+{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}</p>
+{% endif %}
+
+{% if rows %}
+    <table class="rows">
+        <thead><tr><th>name</th><th>description</th><th>price</th></tr></thead>
+        <tbody>
+            {% for r in rows %}
+            <tr><td>{{ r[0] }}</td><td>{{ r[1] }}</td><td>{{ r[2] }}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% elif category and not error %}
+    <p>(no products in that category)</p>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

@@ -29,6 +29,17 @@ CLASSES = [
             "tools differ on. Each lab shows what the scanner should fire on."
         ),
     },
+    {
+        "slug": "sqli",
+        "name": "SQL Injection",
+        "host": "sqli.vulnlab.dev",
+        "status": "live",
+        "labs": 5,
+        "blurb": (
+            "In-band UNION, error-based, blind boolean, blind time-based, and "
+            "second-order — sitting on a real MariaDB backend."
+        ),
+    },
 ]
 
 
