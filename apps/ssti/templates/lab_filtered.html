@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · ssti.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<p>Blocked tokens (substring deny-list): <code>{{ blocked }}</code></p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="greeting">Greeting:</label><br>
+    <input type="text" id="greeting" name="greeting" value="{{ raw|default('') }}" placeholder="Hello, world!" autocomplete="off">
+    <p><button type="submit">Render</button></p>
+</form>
+
+{% if raw %}
+    <details open>
+        <summary>What the filter let through</summary>
+        <pre class="body">{{ filtered }}</pre>
+    </details>
+{% endif %}
+
+{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}</p>
+{% endif %}
+
+{% if rendered is not none %}
+    <h2>Rendered output</h2>
+    <pre class="rendered">{{ rendered }}</pre>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% block title %}ssti.vulnlab.dev{% endblock %}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Intentionally vulnerable SSTI labs for testing security tools.">
+<style>
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body { font: 16px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; max-width: 860px; margin: 1.5rem auto; padding: 0 1rem; }
+header.banner { background: #fff3cd; color: #664d03; border: 1px solid #ffecb5; padding: .6rem 1rem; border-radius: 6px; margin-bottom: 1.5rem; }
+nav { font-size: .9rem; margin-bottom: 1.5rem; }
+nav a { margin-right: 1rem; }
+@media (prefers-color-scheme: dark) {
+    body { background: #0d1117; color: #c9d1d9; }
+    header.banner { background: #3a2e0d; color: #f1deaa; border-color: #6c5316; }
+    a { color: #79c0ff; }
+    .card { background: #161b22; border-color: #30363d; }
+    code, pre, textarea, input { background: #161b22; color: #c9d1d9; }
+    .src { background: #0d1117; }
+    pre.body, pre.rendered { border-color: #30363d; }
+    details { border-color: #30363d; }
+    .pill { background: #21262d; }
+}
+h1 { font-size: 1.6rem; margin-bottom: .25rem; }
+h2 { font-size: 1.15rem; margin-top: 2rem; }
+.tag { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; color: #888; }
+.card { display: block; padding: 1rem 1.25rem; margin: .5rem 0; border: 1px solid #ddd; border-radius: 6px; text-decoration: none; color: inherit; }
+.card:hover { border-color: #888; }
+.card .title { font-weight: 600; font-size: 1.05rem; }
+.card .summary { margin-top: .35rem; font-size: .95rem; color: #999; }
+.pill { display: inline-block; padding: .1em .5em; border-radius: 999px; font-size: .75rem; font-family: ui-monospace, monospace; background: #eee; }
+form { margin: 1rem 0; }
+input[type=text], textarea { width: 100%; padding: .5rem; font-family: ui-monospace, monospace; font-size: .95rem; border: 1px solid #ccc; border-radius: 4px; }
+textarea { min-height: 5em; resize: vertical; }
+button { padding: .5rem 1rem; font-size: 1rem; border: 1px solid #888; background: #f0f0f0; border-radius: 4px; cursor: pointer; }
+@media (prefers-color-scheme: dark) {
+    button { background: #21262d; color: #c9d1d9; border-color: #444c56; }
+    input, textarea { border-color: #30363d; }
+}
+pre.body, pre.rendered { white-space: pre-wrap; word-break: break-all; padding: 1rem; border: 1px solid #ccc; border-radius: 4px; max-height: 50vh; overflow: auto; font-size: .85rem; }
+pre.rendered { background: #f6f8fa; }
+@media (prefers-color-scheme: dark) { pre.rendered { background: #161b22; } }
+.error { color: #b00020; }
+@media (prefers-color-scheme: dark) { .error { color: #ff7b72; } }
+details { padding: .5rem .75rem; border: 1px solid #ccc; border-radius: 4px; margin: .75rem 0; font-size: .9rem; }
+summary { cursor: pointer; }
+footer { margin-top: 3rem; font-size: .85rem; color: #888; border-top: 1px solid #333; padding-top: 1rem; }
+code { font-family: ui-monospace, monospace; padding: .1em .3em; border-radius: 3px; background: #f0f0f0; }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<header class="banner">
+    <strong>⚠ Intentionally vulnerable.</strong>
+    Every endpoint here has a real server-side template injection bug. Find it, exploit it, see what your tools see.
+</header>
+
+<nav>
+    <a href="/">Labs</a>
+    <a href="https://vulnlab.dev/">All classes</a>
+    <a href="https://github.com/sampsonc/vulnlab.dev">Source on GitHub</a>
+</nav>
+
+{% block body %}{% endblock %}
+
+<footer>
+    Source: <a href="https://github.com/sampsonc/vulnlab.dev">github.com/sampsonc/vulnlab.dev</a> ·
+    <a href="/.well-known/security.txt">security.txt</a> ·
+    Part of <a href="https://vulnlab.dev/">vulnlab.dev</a>
+</footer>
+</body>
+</html>

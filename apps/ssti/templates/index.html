@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}SSTI labs · vulnlab.dev{% endblock %}
+{% block body %}
+<h1>SSTI labs</h1>
+<p class="tag">ssti.vulnlab.dev</p>
+
+<p>Five labs covering the server-side template injection surface most tools care about: textbook Jinja2 RCE via <code>render_template_string</code>, Python <code>str.format()</code> attribute-walk SSTI (a separate sink class), substring-blocklist bypass, sandbox bypass through an over-privileged registered helper, and second-order SSTI where storage and render happen on different requests.</p>
+
+<p>Each lab's per-lab flag string is in <code>app.config</code> under <code>VULNLAB_SSTI_&lt;slug&gt;</code>. In Flask, Jinja2 templates have access to <code>config</code> — that's the textbook extraction path.</p>
+
+<h2>Labs</h2>
+{% for lab in labs %}
+<a class="card" href="/{{ lab.slug }}/">
+    <div class="title">{{ lab.title }} <span class="pill">{{ lab.sink }}</span></div>
+    <div class="summary">{{ lab.summary }}</div>
+</a>
+{% endfor %}
+
+<h2>For tool builders</h2>
+<p>Source for every lab is published. Each lab page links to its own source via <code>/source/&lt;slug&gt;</code>. Each lab also exposes a JSON detection hint at <code>/meta/&lt;slug&gt;</code> (and an index at <code>/meta/</code>) describing what a scanner should report: CWE, subtype, sinks, exploit examples, success markers, tags.</p>
+{% endblock %}

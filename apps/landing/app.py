@@ -40,6 +40,18 @@ CLASSES = [
             "second-order — sitting on a real MariaDB backend."
         ),
     },
+    {
+        "slug": "ssti",
+        "name": "Server-Side Template Injection",
+        "host": "ssti.vulnlab.dev",
+        "status": "live",
+        "labs": 5,
+        "blurb": (
+            "Jinja2 render_template_string, Python str.format() attribute walk, "
+            "blocklist bypass, sandbox bypass via an over-privileged helper, "
+            "and second-order through a stored draft."
+        ),
+    },
 ]
 
 

@@ -1,0 +1,53 @@
+[Unit]
+Description=ssti.vulnlab.dev — intentionally vulnerable SSTI labs (Flask)
+After=network.target
+Documentation=https://github.com/sampsonc/vulnlab.dev
+
+[Service]
+Type=simple
+WorkingDirectory=/home/chs/vulnlab.dev
+
+# workers=1 because the second-order lab keeps drafts in process memory.
+# Multiple workers would scatter drafts across processes so a /preview
+# request might hit a worker that never saw the /save.
+ExecStart=/home/chs/vulnlab.dev/.venv/bin/gunicorn \
+    --bind 127.0.0.1:8085 \
+    --workers 1 \
+    --timeout 30 \
+    --access-logfile - \
+    --error-logfile - \
+    apps.ssti.app:app
+Restart=on-failure
+RestartSec=2s
+
+# Hardening. SSTI labs grant arbitrary Python code execution by design,
+# so the filesystem sandbox is tighter than the other lab services: the
+# process sees an empty /home (tmpfs) with only the repo bind-mounted
+# read-only inside it. RCE inside the lab cannot read anything outside
+# the repo it serves.
+DynamicUser=yes
+ProtectSystem=strict
+ProtectHome=tmpfs
+BindReadOnlyPaths=/home/chs/vulnlab.dev
+PrivateTmp=yes
+PrivateDevices=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+
+# Network: SSTI labs never need outbound. Deny everything except loopback.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+IPAddressDeny=any
+IPAddressAllow=127.0.0.0/8
+
+[Install]
+WantedBy=multi-user.target

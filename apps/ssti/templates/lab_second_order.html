@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · ssti.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<h2>1. Save a draft</h2>
+<form method="post" action="/{{ meta.slug }}/save">
+    <label for="key">Draft key:</label><br>
+    <input type="text" id="key" name="key" placeholder="my-draft" autocomplete="off">
+    <label for="body" style="margin-top:.5rem; display:block">Body (stored verbatim, no render):</label>
+    <textarea id="body" name="body" placeholder="Hello {{ user }}, welcome!"></textarea>
+    <p><button type="submit">Save</button></p>
+</form>
+
+<h2>2. Preview a draft</h2>
+<form method="get" action="/{{ meta.slug }}/preview">
+    <label for="id">Draft key:</label><br>
+    <input type="text" id="id" name="id" placeholder="my-draft" autocomplete="off">
+    <p><button type="submit">Preview (renders)</button></p>
+</form>
+
+{% if drafts %}
+    <p>Existing drafts: {% for k in drafts %}<code>{{ k }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+
+{% if active_key %}
+    <h3>Preview of draft <code>{{ active_key }}</code></h3>
+    {% if body is defined and body is not none %}
+        <details open>
+            <summary>Stored body (raw)</summary>
+            <pre class="body">{{ body }}</pre>
+        </details>
+    {% endif %}
+    {% if error %}
+        <p class="error"><strong>Error:</strong> {{ error }}</p>
+    {% endif %}
+    {% if rendered is not none %}
+        <pre class="rendered">{{ rendered }}</pre>
+    {% endif %}
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}

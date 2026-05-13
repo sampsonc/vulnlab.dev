@@ -1,19 +1,20 @@
 # vulnlab.dev — agent notes
 
 Intentionally vulnerable web labs for testing security tools. Each vuln class
-gets its own subdomain. Currently `ssrf.`, `xss.`, and `sqli.` are live;
-the shape extends to `ssti.`, etc.
+gets its own subdomain. Currently `ssrf.`, `xss.`, `sqli.`, and `ssti.`
+are live; the shape extends to other classes the same way.
 
 ## Topology
 
 | Service | Bind | Backed by |
 |---|---|---|
-| nginx | `:80` / `:443` (vulnlab.dev, ssrf./xss./sqli.vulnlab.dev) | system nginx |
+| nginx | `:80` / `:443` (vulnlab.dev, ssrf./xss./sqli./ssti.vulnlab.dev) | system nginx |
 | nginx | `169.254.169.254:80` (mock IMDS proxy) | system nginx |
 | `vulnlab-landing` | `127.0.0.1:8081` | gunicorn → `apps.landing.app:app` |
 | `vulnlab-ssrf` | `127.0.0.1:8082` | gunicorn → `apps.ssrf.app:app` |
 | `vulnlab-xss` | `127.0.0.1:8083` | gunicorn → `apps.xss.app:app` (workers=1: stored-XSS lab keeps comments in memory) |
 | `vulnlab-sqli` | `127.0.0.1:8084` | gunicorn → `apps.sqli.app:app` (reads DB creds from `/etc/vulnlab/sqli.env`) |
+| `vulnlab-ssti` | `127.0.0.1:8085` | gunicorn → `apps.ssti.app:app` (workers=1: second-order lab keeps drafts in memory; tight FS sandbox because SSTI labs grant RCE by design) |
 | `vulnlab-internal` | `127.0.0.1:8089` | gunicorn → `apps.internal.app:app` (the SSRF labs' "you shouldn't reach this" target) |
 | `vulnlab-metadata-mock` | `127.0.0.1:8169` | gunicorn → `apps.metadata_mock.app:app` (AWS + GCP + Azure flavors, all on 169.254.169.254 via nginx) |
 | `vulnlab-gopher-target` | `127.0.0.1:6479` | python → `apps.gopher_target.app` (raw TCP, replies to any bytes with a flag; used by the gopher SSRF lab) |

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.title }} · ssti.vulnlab.dev{% endblock %}
+{% block body %}
+<h1>{{ meta.title }}</h1>
+<p class="tag">/{{ meta.slug }} · sink: <code>{{ meta.sink }}</code></p>
+
+<p>{{ meta.summary }}</p>
+
+<form method="get" action="/{{ meta.slug }}/">
+    <label for="template">Format template (substitutes <code>{user.x}</code>):</label><br>
+    <input type="text" id="template" name="template" value="{{ template|default('') }}" placeholder="Hello, {user.name}!" autocomplete="off">
+    <p><button type="submit">Format</button></p>
+</form>
+
+{% if error %}
+    <p class="error"><strong>Error:</strong> {{ error }}</p>
+{% endif %}
+
+{% if rendered is not none %}
+    <h2>Rendered output</h2>
+    <pre class="rendered">{{ rendered }}</pre>
+{% endif %}
+
+<details>
+    <summary>Hint</summary>
+    <p>{{ meta.hint }}</p>
+</details>
+
+<p style="margin-top: 1.5rem"><a href="/source/{{ meta.slug }}">View source →</a> · <a href="/meta/{{ meta.slug }}">/meta/{{ meta.slug }}</a></p>
+{% endblock %}
